@@ -15,29 +15,30 @@ zombies <- read.csv("zombies.csv")
 
 1. Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education). NOTE: You will not want to use the built in var() and sd() commands as these are for samples.
 ```{r}
+# Create a dataframe to store population statistics
+pop_stats <- data.frame(Variable = c("height", "weight", "age", "zombies_killed", "years_of_education"), Mean = numeric(5), SD = numeric(5))
+
 # Height
-height_mean <- mean(zombies$height)
-height_sd <- sqrt(mean((zombies$height - height_mean)^2))
+pop_stats$Mean[1] <- mean(zombies$height)
+pop_stats$SD[1] <- sqrt(mean((zombies$height - mean(zombies$height))^2))
 
 # Weight
-weight_mean <- mean(zombies$weight)
-weight_sd <- sqrt(mean((zombies$weight - weight_mean)^2))
+pop_stats$Mean[2] <- mean(zombies$weight)
+pop_stats$SD[2] <- sqrt(mean((zombies$weight - mean(zombies$weight))^2))
 
 # Age
-age_mean <- mean(zombies$age)
-age_sd <- sqrt(mean((zombies$age - age_mean)^2))
+pop_stats$Mean[3] <- mean(zombies$age)
+pop_stats$SD[3] <- sqrt(mean((zombies$age - mean(zombies$age))^2))
 
-# Number of Zombies Killed
-zombies_killed_mean <- mean(zombies$zombies_killed)
-zombies_killed_sd <- sqrt(mean((zombies$zombies_killed - zombies_killed_mean)^2))
+# Zombies Killed
+pop_stats$Mean[4] <- mean(zombies$zombies_killed)
+pop_stats$SD[4] <- sqrt(mean((zombies$zombies_killed - mean(zombies$zombies_killed))^2))
 
 # Years of Education
-education_mean <- mean(zombies$years_of_education)
-education_sd <- sqrt(mean((zombies$years_of_education - education_mean)^2))
+pop_stats$Mean[5] <- mean(zombies$years_of_education)
+pop_stats$SD[5] <- sqrt(mean((zombies$years_of_education - mean(zombies$years_of_education))^2))
 
 # Display Results
-pop_stats <- data.frame(Variable = c("Height", "Weight", "Age", "Zombies Killed", "Years of Education"), Mean = c(height_mean, weight_mean, age_mean, zombies_killed_mean, education_mean), SD = c(height_sd, weight_sd, age_sd, zombies_killed_sd, education_sd))
-
 pop_stats
 ```
 
@@ -95,172 +96,81 @@ qqnorm(zombies$zombies_killed); qqline(zombies$zombies_killed)
 hist(zombies$years_of_education, main = "Years of Education", xlab = "Years of Education")
 qqnorm(zombies$years_of_education); qqline(zombies$years_of_education)
 par(mfrow = c(1, 1))
-
+```
 ## Hight: the variable is a normal distribution. The histogram is symmetric and bell-shaped, and the Q-Q plots closely align with the line.
 ## Weight: the variable is a normal distribution. The histogram is closely symmetric and bell-shaped, and the Q-Q plots closely align with the line.
 ## Age: the variable is roughly normal. The histogram is symmetric and bell-shaped, and the Q-Q plot shows minor deviations from the line.
 ## Zombies Killed: the variable is not normal. The histogram is right-skewed, and the Q-Q plot shows a deviation from the diagonal line. This should be the Poisson distribution.
 ## Years of Education: this variable is not normal. The histogram is right-skewed, and the Q-Q plot shows a strong deviation from the diagonal line. This should be the discrete distribution.
-```
 
 
 5. Now use the sample() function to sample ONE subset of 30 zombie survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable, and construct the 95% confidence interval for each mean. Note that for the variables that are not drawn from the normal distribution, you may need to base your estimate of the CIs on slightly different code than for the normal…
 ```{r}
-# Take a sample of 30 zombies without replacement
+# Take a random sample of 30 zombie survivors
 set.seed(123)
-zombie_sample <- zombies[sample(nrow(zombies), 30, replace = FALSE), ]
+zombie_indices <- sample(1:nrow(zombies), 30, replace = FALSE)
+sample_data <- zombies[zombie_indices, ]  # This line was missing
 
-# Calculate sample statistics for each variable
+# Variables to analyze
 variables <- c("height", "weight", "age", "zombies_killed", "years_of_education")
 
-for(var in variables)
-    # Calculate mean
-    sample_mean <- mean(zombie_sample[[var]])
-    
-    # Calculate sample sd
-    sample_sd <- sd(zombie_sample[[var]])
-    
-    # Calculate se
-    se <- sample_sd/sqrt(30)
-    
-    # Calculate 95% ci
-    ci <- c(sample_mean - qt(0.975, 29)*se, 
-            sample_mean + qt(0.975, 29)*se)
-    
-    # Print results
-    cat("\nResults for", var)
-    cat("Sample Mean:", round(sample_mean, 3))
-    cat("Sample SD:", round(sample_sd, 3))
-    cat("Standard Error:", round(se, 3))
-    cat("95% CI:", round(ci, 3))
+# Create a dataframe to store results
+results <- data.frame(
+  variable = variables,
+  mean = numeric(length(variables)),
+  sd = numeric(length(variables)),
+  se = numeric(length(variables)),
+  lower_ci = numeric(length(variables)),
+  upper_ci = numeric(length(variables)))
+
+# Calculate statistics for each variable
+for (i in 1:length(variables)) {
+  var_name <- variables[i]
+  x <- sample_data[[var_name]]
+  
+  results$mean[i] <- mean(x)
+  results$sd[i] <- sd(x)
+  results$se[i] <- sd(x)/sqrt(length(x))
+  t_critical <- qt(0.975, df = length(x) - 1)
+  results$lower_ci[i] <- results$mean[i] - t_critical * results$se[i]
+  results$upper_ci[i] <- results$mean[i] + t_critical * results$se[i]
+}
+
+# Print the results
+print(results)
 ```
 
 6. Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in [5]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?
 ```{r}
-# Set up a data frame to store means from all 100 samples
-variables <- c("age", "height", "weight", "iq", "years_of_education", "num_children", "optimism")
-all_sample_means <- matrix(nrow = 100, ncol = length(variables))
-colnames(all_sample_means) <- variables
-
-# For reproducibility
+# Set seed
 set.seed(123)
 
-# Draw 100 samples and calculate means for each variable
-for(i in 1:100) {
-  zombie_sample <- zombies[sample(nrow(zombies), 30, replace = FALSE), ]
-  for(j in 1:length(variables)) {
-    all_sample_means[i, j] <- mean(zombie_sample[[variables[j]]])
-  }
-}
+# Create matrix to store 100 sample means
+sample_means <- matrix(0, nrow = 100, ncol = length(variables))
+colnames(sample_means) <- variables
 
-# Convert to data
-all_sample_means <- as.data.frame(all_sample_means)
+# Draw 100 samples and calculate means
+for(i in 1:100) {zombie_sample <- zombies[sample(1:nrow(zombies), 30), ]
+  for(j in 1:length(variables)) {sample_means[i, j] <- mean(zombie_sample[[variables[j]]])}}
 
-# Create results table for sampling distributions
-sampling_results <- data.frame(
-  Variable = variables,
-  Mean_of_Means = numeric(length(variables)),
-  SD_of_Means = numeric(length(variables)),
-  Theoretical_SE = numeric(length(variables))
-)
+# Convert to dataframe for easier analysis
+sample_means <- as.data.frame(sample_means)
 
-# Calculate statistics for the sampling distributions
-for(i in 1:length(variables)) {
-  var <- variables[i]
-  sampling_results$Mean_of_Means[i] <- mean(all_sample_means[[var]])
-  sampling_results$SD_of_Means[i] <- sd(all_sample_means[[var]])
-  sampling_results$Theoretical_SE[i] <- sd(zombies[[var]])/sqrt(30)
-}
+# Calculate sampling distribution statistics
+results <- data.frame(Varibles = variables, Mean = sapply(sample_means, mean),SD = sapply(sample_means, sd),SE = sapply(variables, function(v) sd(zombies[[v]])/sqrt(30)))
 
-# Print results
-print(sampling_results)
+print(results)
 
-# Create histograms for each variable (with explicit breaks)
-plot_sampling_dist <- function() {
-  # Set up plotting area with 2 rows and 4 columns
-  par(mfrow = c(2, 4))
-  
-  # Loop through variables and create histograms with explicit breaks
-  for(var in variables) {
-    # Get the data for this variable
-    data_var <- all_sample_means[[var]]
-    
-    # Check for valid data
-    if(length(data_var) > 0 && !all(is.na(data_var)) && var(data_var) > 0) {
-      # Create histogram with fixed number of breaks
-      hist(data_var, 
-           breaks = 10,  # Fixed number of breaks
-           main = paste("Sampling Distribution of", var),
-           xlab = "Sample Mean",
-           probability = TRUE,
-           col = "lightblue",
-           border = "black")
-      
-      # Add a density curve
-      x <- seq(min(data_var), max(data_var), length.out = 100)
-      y <- dnorm(x, mean = mean(data_var), sd = sd(data_var))
-      lines(x, y, col = "red", lwd = 2)
-    } else {
-      # Create an empty plot with a message if data is invalid
-      plot(0, 0, type = "n", axes = FALSE, 
-           main = paste("Cannot plot", var), 
-           xlab = "", ylab = "")
-      text(0, 0, "Invalid data for histogram")
-    }
-  }
-  
-  # Reset to one plot per figure
-  par(mfrow = c(1, 1))
-}
-
-# Create Q-Q plots for each variable's sampling distribution
-plot_qq_sampling <- function() {
-  par(mfrow = c(2, 4))
-  for(var in variables) {
-    # Get the data for this variable
-    data_var <- all_sample_means[[var]]
-    
-    # Check for valid data
-    if(length(data_var) > 0 && !all(is.na(data_var)) && var(data_var) > 0) {
-      qqnorm(data_var, main = paste("Q-Q Plot for", var, "Means"))
-      qqline(data_var, col = "red")
-    } else {
-      # Create an empty plot with a message if data is invalid
-      plot(0, 0, type = "n", axes = FALSE, 
-           main = paste("Cannot plot Q-Q for", var), 
-           xlab = "", ylab = "")
-      text(0, 0, "Invalid data for Q-Q plot")
-    }
-  }
-  par(mfrow = c(1, 1))
-}
-
-# Display plots
-plot_sampling_dist()
-plot_qq_sampling()
-
-# Test for normality
-normality_results <- data.frame(
-  Variable = variables,
-  P_Value = numeric(length(variables)),
-  Normal = character(length(variables))
-)
-
-for(i in 1:length(variables)) {
-  var <- variables[i]
-  data_var <- all_sample_means[[var]]
-  
-  # Check for valid data
-  if(length(data_var) > 0 && !all(is.na(data_var)) && var(data_var) > 0) {
-    test <- shapiro.test(data_var)
-    normality_results$P_Value[i] <- test$p.value
-    normality_results$Normal[i] <- ifelse(test$p.value > 0.05, "Yes", "No")
-  } else {
-    normality_results$P_Value[i] <- NA
-    normality_results$Normal[i] <- "Could not test"
-  }
-}
-
-# Print normality test results
-print(normality_results)
+# Create QQ plots
+par(mfrow = c(2, 3))
+for(var in variables) {qqnorm(sample_means[[var]], main = paste("QQ Plot:", var))
+  qqline(sample_means[[var]], col = "red")}
 ```
+
+## Comparing Standard Deviations to Standard Errors
+The standard deviations of the sampling distributions should closely match the standard errors calculated in question 5. This confirms the statistical theory that the standard deviation of sample means equals σ/√n.
+
+## Normality of Sampling Distributions
+For variables that were originally normally distributed (height, weight, age), their sampling distributions is also be normal.
+For zombies_killed and years of education, even these non-normal variables will have approximately normal sampling distributions, the Q-Q plots show points much closer to the diagonal line and all sampling distributions will appear roughly normal.
+This demonstrates why we can apply many statistical tests to means even when the original data isn't normal, as long as the sample size is large enough (n≥30).
