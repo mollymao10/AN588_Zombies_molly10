@@ -1,15 +1,19 @@
 ---
-title: "molly_OriginalHomeworkCode_03"
+title: "molly_FinalHomeworkCode_03"
 author: "Yinuo Mao"
-date: "2025-02-11"
-output: html_document
+date: "2025-03-06"
+output:
+  rmdformats::readthedown:
+    toc_depth: 2
+---
 
-```{r}
-zombies <- read.csv("zombies.csv")
-```
+![Favorite Zombie Picture](https://static.wikia.nocookie.net/plantsvszombies/images/5/54/Zombie1.png/revision/latest/scale-to-width/360?cb=20230830191507)
 
-1. Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education). NOTE: You will not want to use the built in var() and sd() commands as these are for samples.
+## Question 1. Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education).
 ```{r}
+#Load the csv from Github
+zombies <- read.csv("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/refs/heads/master/AN588_Spring25/zombies.csv")
+
 # Create a dataframe to store population statistics
 pop_stats <- data.frame(Variable = c("height", "weight", "age", "zombies_killed", "years_of_education"), Mean = numeric(5), SD = numeric(5))
 
@@ -37,9 +41,13 @@ pop_stats$SD[5] <- sqrt(mean((zombies$years_of_education - mean(zombies$years_of
 pop_stats
 ```
 
-2. Use {ggplot} to make boxplots of each of these variables by gender.
+## Question 2. Use {ggplot} to make boxplots of each of these variables by gender.
 ```{r}
+library(tidyr)
 library(ggplot2)
+```
+
+```{r}
 # Height by Gender
 ggplot(zombies, aes(x = gender, y = height)) + geom_boxplot() + ggtitle("Height by Gender")
 
@@ -56,18 +64,17 @@ ggplot(zombies, aes(x = gender, y = zombies_killed)) + geom_boxplot() + ggtitle(
 ggplot(zombies, aes(x = gender, y = years_of_education)) + geom_boxplot() + ggtitle("Years of Education by Gender")
 ```
 
-3. Use {ggplot} to make scatterplots of height and weight in relation to age. Do these variables seem to be related? In what way?
+## Question 3. Use {ggplot} to make scatterplots of height and weight in relation to age. Do these variables seem to be related? In what way?
 ```{r}
 # Height vs Age
 ggplot(zombies, aes(x = age, y = height)) + geom_point() + geom_smooth(method = 'lm') + ggtitle("Height vs Age")
 
 # Weight vs Age
 ggplot(zombies, aes(x = age, y = weight)) + geom_point() + geom_smooth(method = 'lm') + ggtitle("Weight vs Age")
-
-## Height and age have a stronger positive relationship than that of weight and age.
 ```
+Conclusion: both height and weight show positive relationships with age, meaning both increase as age increases. However, the relationship is stronger for height than for weight, suggesting age has a more direct influence on height development than on weight.
 
-4. Using histograms and Q-Q plots, check whether the quantitative variables seem to be drawn from a normal distribution. Which seem to be and which do not (hint: not all are drawn from the normal distribution)? For those that are not normal, can you determine from which common distribution they are drawn?
+## Question 4. Using histograms and Q-Q plots, check whether the quantitative variables seem to be drawn from a normal distribution. Which seem to be and which do not? For those that are not normal, can you determine from which common distribution they are drawn?
 ```{r}
 par(mfrow = c(2, 2))
 
@@ -92,14 +99,18 @@ hist(zombies$years_of_education, main = "Years of Education", xlab = "Years of E
 qqnorm(zombies$years_of_education); qqline(zombies$years_of_education)
 par(mfrow = c(1, 1))
 ```
-## Hight: the variable is a normal distribution. The histogram is symmetric and bell-shaped, and the Q-Q plots closely align with the line.
-## Weight: the variable is a normal distribution. The histogram is closely symmetric and bell-shaped, and the Q-Q plots closely align with the line.
-## Age: the variable is roughly normal. The histogram is symmetric and bell-shaped, and the Q-Q plot shows minor deviations from the line.
-## Zombies Killed: the variable is not normal. The histogram is right-skewed, and the Q-Q plot shows a deviation from the diagonal line. This should be the Poisson distribution.
-## Years of Education: this variable is not normal. The histogram is right-skewed, and the Q-Q plot shows a strong deviation from the diagonal line. This should be the discrete distribution.
+- Hight: the variable is a normal distribution. The histogram is symmetric and bell-shaped, and the Q-Q plots closely align with the line.
+
+- Weight: the variable is a normal distribution. The histogram is closely symmetric and bell-shaped, and the Q-Q plots closely align with the line.
+
+- Age: the variable is roughly normal. The histogram is symmetric and bell-shaped, and the Q-Q plot shows minor deviations from the line.
+
+- Zombies Killed: the variable is not normal. The histogram is right-skewed, and the Q-Q plot shows a deviation from the diagonal line. This should be the Poisson distribution.
+
+- Years of Education: this variable is not normal. The histogram is right-skewed, and the Q-Q plot shows a strong deviation from the diagonal line. This should be the Poisson distribution.
 
 
-5. Now use the sample() function to sample ONE subset of 30 zombie survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable, and construct the 95% confidence interval for each mean. Note that for the variables that are not drawn from the normal distribution, you may need to base your estimate of the CIs on slightly different code than for the normal…
+## Question 5. Now use the sample() function to sample ONE subset of 30 zombie survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable, and construct the 95% confidence interval for each mean. 
 ```{r}
 # Take a random sample of 30 zombie survivors
 set.seed(123)
@@ -135,7 +146,7 @@ for (i in 1:length(variables)) {
 print(results)
 ```
 
-6. Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in [5]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?
+## Question 6. Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in [5]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?
 ```{r}
 # Set seed
 set.seed(123)
@@ -161,11 +172,10 @@ par(mfrow = c(2, 3))
 for(var in variables) {qqnorm(sample_means[[var]], main = paste("QQ Plot:", var))
   qqline(sample_means[[var]], col = "red")}
 ```
-
-## Comparing Standard Deviations to Standard Errors
+- Comparing Standard Deviations to Standard Errors
 The standard deviations of the sampling distributions should closely match the standard errors calculated in question 5. This confirms the statistical theory that the standard deviation of sample means equals σ/√n.
 
-## Normality of Sampling Distributions
+- Normality of Sampling Distributions
 For variables that were originally normally distributed (height, weight, age), their sampling distributions is also be normal.
 For zombies_killed and years of education, even these non-normal variables will have approximately normal sampling distributions, the Q-Q plots show points much closer to the diagonal line and all sampling distributions will appear roughly normal.
 This demonstrates why we can apply many statistical tests to means even when the original data isn't normal, as long as the sample size is large enough (n≥30).
